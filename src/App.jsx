@@ -3,6 +3,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { jwtDecode } from "jwt-decode";
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import axios from 'axios';
 
 
 // Pages
@@ -124,7 +125,6 @@ const App = () => {
     setTheme(theme === darkTheme ? lightTheme : darkTheme);
   };
 
-
   // Função para verificar se há um usuário armazenado no sessionStorage
   useEffect(() => {
     const storedUser = sessionStorage.getItem('user');
@@ -139,6 +139,17 @@ const App = () => {
     // set in sessionStorage
     console.log(decoded);
     sessionStorage.setItem('user', JSON.stringify(decoded));
+
+    axios.post('https://rem.nexustech.net.br/api_rem/busca_dados_empresa.php', { parceiro: decoded.email })
+      .then((response) => {
+        console.log(response.data)
+        if (response.data.success) {
+          setUser({ ...user, empresa: response.data.empresa });
+        } else {
+          console.log('Erro ao buscar empresa');
+        }
+      })
+    
   };
 
   const handleLogout = () => {
@@ -167,7 +178,6 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Home user={user} />} />
               <Route path="/importacoes" element={<Importacoes user={user} />} />
-              <Route path="/baixar-rem" element={<DownloadREM user={user} />} />
             </Routes>
           </div>
         </div>

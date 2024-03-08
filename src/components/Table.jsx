@@ -4,13 +4,20 @@ import { DataGrid, ptBR } from '@mui/x-data-grid';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import ArticleIcon from '@mui/icons-material/Article';
+// sweetalert2
+import Swal from 'sweetalert2';
 
 import ModalImportacoes from './ModalImportacoes';
 
+import DownloadREM from '../pages/DownloadREM';
+import axios from 'axios';
 
-const Table = ({ rows }) => {
+import { BANCOS } from './Config';
+
+
+const Table = ({ rows, onUpdate }) => {
     const [open, setOpen] = useState(false);
-    const [ dados, setDados ] = useState([])
+    const [dados, setDados] = useState([])
 
 
     const columns = [
@@ -32,7 +39,11 @@ const Table = ({ rows }) => {
         {
             field: 'banco',
             headerName: 'Banco',
-            flex: 2
+            flex: 2,
+            renderCell: (params) => (
+                <>{BANCOS.find(banco => banco.cod === params.row.banco).nome}</>
+            ),
+
         },
         {
             field: 'qtd_registros',
@@ -65,11 +76,10 @@ const Table = ({ rows }) => {
             headerName: 'Gerar REM',
             flex: 1,
             renderCell: (params) => (
-                <IconButton aria-label="Editar registro"
-                    onClick={() => handleEdit(params.row)}
-                >
-                    <ArticleIcon />
-                </IconButton>
+                <>
+                    <DownloadREM row={params.row} />
+                </>
+
             ),
         },
         {
@@ -90,11 +100,43 @@ const Table = ({ rows }) => {
         setDados(row); // Atualiza o estado `dados` com os dados da linha
         setOpen(true); // Abre o modal
     };
-    
 
     const handleDelete = (row) => {
-        console.log(row); // Aqui você tem todos os valores da row
-        // Você pode chamar outra função aqui, passando `row` ou parte dela
+        const data = {
+            importacaoId: row.id
+        }
+        // confirmação de exclusão
+        Swal.fire({
+            title: 'Deseja realmente apagar?',
+            text: "Você não poderá reverter essa operação!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, apagar!',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.post('https://rem.nexustech.net.br/api_rem/deletar_importacao.php', data)
+                    .then(response => {
+                        Swal.fire(
+                            'Registro apagado!',
+                            response.data.message,
+                            'success'
+                        )
+                        // Update the table data
+                        onUpdate();
+                    })
+                    .catch(error => {
+                        Swal.fire(
+                            'Erro!',
+                            'Erro ao apagar registro.',
+                            'error'
+                        )
+                    })
+            }
+        })
+
     };
 
     return (

@@ -159,12 +159,10 @@ const Home = ({user}) => {
             ...data,
             dadosImportacao: user
         }
-
-        console.log("Dados importados:", data);
+        
         // Aqui você pode processar os dados importados conforme necessário.
         axios.post('https://rem.nexustech.net.br/api_rem/importa_dados.php', importacao)
-            .then((response) => {
-                console.log(response);
+            .then((response) => {                
                 if(response.data.success){
                      Swal.fire({
                     title: response.data.message,
